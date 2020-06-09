@@ -94,38 +94,39 @@ class Chandra(Telescope):
         To specify an energy range from a minimum energy A to a maximum energy B, use list notation: [A, B].
         """
         if e_list is not None:
+            # Use list of energies instead of specified ranges to make histogram
             e_band = e_list
         else:
-            try:  # If a range with a max and min is passed as input.
+            try:  # If a range with a max and min is passed as input
                 min_e, max_e = e_range
-            except ValueError:  # If a range with only a min is passed as input.
+            except ValueError:  # If a range with only a min is passed as input
                 min_e, max_e = e_range, float("inf")
-            except TypeError:  # If no range is passed as input.
+            except TypeError:  # If no range is passed as input
                 min_e, max_e = 0, float("inf")
-            evt_data = fits.getdata(self.path)
-            energy = evt_data["PI"]
-            min_thresh = energy >= min_e
-            max_thresh = energy < max_e
+            evt_data = fits.getdata(self.path)  # Get data from event file
+            energy = evt_data["energy"]  # Extract energy data
+            min_thresh = energy >= min_e  # Establish min filter
+            max_thresh = energy < max_e  # Establish max filter
+            # Filter energy for everything between specified min and max values
             e_band = energy[min_thresh & max_thresh]
         plt.hist(e_band, bins=nbins)
         if e_list2 is not None:
+            # Overlay second histogram if data is present
             plt.hist(e_list2, bins=nbins)
         plt.xlabel("Energy (eV)")
         plt.ylabel("Count")
         if not object:
-            plt.title(
-                f"Energy Distribution")
+            plt.title(f"Energy Distribution")
         elif object:
-            plt.title(
-                f"{object} Energy Distribution")
+            plt.title(f"{object} Energy Distribution")
         if save == True:
             if object:
                 if filename is None:
-                    plt.savefig(
-                        f"{self.file_dir}/ehist.png", dpi=250, format="png")
+                    plt.savefig(f"{self.file_dir}/ehist.png",
+                                dpi=250, format="png")
                 else:
-                    plt.savefig(
-                        f"{self.file_dir}/{filename}", dpi=250, format="png")
+                    plt.savefig(f"{self.file_dir}/{filename}",
+                                dpi=250, format="png")
                 print(f"Histogram saved to {self.file_dir}.")
             else:
                 if filename is None:
@@ -133,8 +134,8 @@ class Chandra(Telescope):
                         f"Histogram is not of a specified object, so you must specify a filename.\nNo file saved.")
                     return
                 else:
-                    plt.savefig(
-                        f"{self.file_dir}/{filename}", dpi=250, format="png")
+                    plt.savefig(f"{self.file_dir}/{filename}",
+                                dpi=250, format="png")
                     print(f"Histogram saved to {self.file_dir}.")
             plt.close()
         else:
@@ -263,21 +264,24 @@ class XMM(Telescope):
         To specify an energy range from a minimum energy A to a maximum energy B, use list notation: [A, B].
         """
         if e_list is not None:
+            # Use list of energies instead of specified ranges to make histogram
             e_band = e_list
         else:
-            try:  # If a range with a max and min is passed as input.
+            try:  # If a range with a max and min is passed as input
                 min_e, max_e = e_range
-            except ValueError:  # If a range with only a min is passed as input.
+            except ValueError:  # If a range with only a min is passed as input
                 min_e, max_e = e_range, float("inf")
-            except TypeError:  # If no range is passed as input.
+            except TypeError:  # If no range is passed as input
                 min_e, max_e = 0, float("inf")
-            evt_data = fits.getdata(self.path)
-            energy = evt_data["PI"]
-            min_thresh = energy >= min_e
-            max_thresh = energy < max_e
+            evt_data = fits.getdata(self.path)  # Get data from event file
+            energy = evt_data["PI"]  # Extract energy data
+            min_thresh = energy >= min_e  # Establish min filter
+            max_thresh = energy < max_e  # Establish max filter
+            # Filter energy for everything between specified min and max values
             e_band = energy[min_thresh & max_thresh]
         plt.hist(e_band, bins=nbins)
         if e_list2 is not None:
+            # Overlay second histogram if data is present
             plt.hist(e_list2, bins=nbins)
         plt.xlabel("Energy (eV)")
         plt.ylabel("Count")
@@ -432,22 +436,25 @@ class Rosat(Telescope):
         To specify an energy range from a minimum energy A to a maximum energy B, use list notation: [A, B].
         """
         if e_list is not None:
+            # Use list of energies instead of specified ranges to make histogram
             e_band = e_list
         else:
-            try:  # If a range with a max and min is passed as input.
+            try:  # If a range with a max and min is passed as input
                 min_e, max_e = e_range
-            except ValueError:  # If a range with only a min is passed as input.
+            except ValueError:  # If a range with only a min is passed as input
                 min_e, max_e = e_range, float("inf")
-            except TypeError:  # If no range is passed as input.
+            except TypeError:  # If no range is passed as input
                 min_e, max_e = 0, float("inf")
             hdul = fits.open(self.path)  # Open data file
             evt_data = hdul[2].data  # Get event data from file
             energy = evt_data["PI"]  # Get energy data from event data
-            min_thresh = energy >= min_e
-            max_thresh = energy < max_e
+            min_thresh = energy >= min_e  # Establish min filter
+            max_thresh = energy < max_e  # Establish max filter
+            # Filter energy for everything between specified min and max values
             e_band = energy[min_thresh & max_thresh]
         plt.hist(e_band, bins=nbins)
         if e_list2 is not None:
+            # Overlay second histogram if data is present
             plt.hist(e_list2, bins=nbins)
         plt.xlabel("Energy (eV)")
         plt.ylabel("Count")
@@ -604,21 +611,24 @@ class Swift(Telescope):
         To specify an energy range from a minimum energy A to a maximum energy B, use list notation: [A, B].
         """
         if e_list is not None:
+            # Use list of energies instead of specified ranges to make histogram
             e_band = e_list
         else:
-            try:  # If a range with a max and min is passed as input.
+            try:  # If a range with a max and min is passed as input
                 min_e, max_e = e_range
-            except ValueError:  # If a range with only a min is passed as input.
+            except ValueError:  # If a range with only a min is passed as input
                 min_e, max_e = e_range, float("inf")
-            except TypeError:  # If no range is passed as input.
+            except TypeError:  # If no range is passed as input
                 min_e, max_e = 0, float("inf")
-            evt_data = fits.getdata(self.path)
-            energy = evt_data["PI"]
-            min_thresh = energy >= min_e
-            max_thresh = energy < max_e
+            evt_data = fits.getdata(self.path)  # Get data from event file
+            energy = evt_data["PI"]  # Extract energy data
+            min_thresh = energy >= min_e  # Establish min filter
+            max_thresh = energy < max_e  # Establish max filter
+            # Filter energy for everything between specified min and max values
             e_band = energy[min_thresh & max_thresh]
         plt.hist(e_band, bins=nbins)
         if e_list2 is not None:
+            # Overlay second histogram if data is present
             plt.hist(e_list2, bins=nbins)
         plt.xlabel("Energy (eV)")
         plt.ylabel("Count")
