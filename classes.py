@@ -4,13 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # data_dir should be a directory containing each object as it's own subdirectory. Objects should have subdirectories for each telescope's data.
-data_dir = "/Users/hunterholland/Documents/Research/Laidlaw/Modified Data"
+data_dir = "/Users/hunterholland/Documents/Research/Laidlaw/Data/Modified"
 
-objects = {}
+object_dict = {}
 # Creates dictionary of object names and their directories' file paths.
 for entry in os.scandir(data_dir):
-    if not entry.name.startswith('.') and entry.is_dir():
-        objects[entry.name] = entry.path
+    if entry.is_dir() and not entry.name.startswith('.'):
+        object_dict[entry.name] = entry.path
+objects = list(object_dict.values())
+objects.sort()
 
 
 class Telescope:
@@ -25,11 +27,11 @@ class Telescope:
                     self.file_dir = directory
                     self.filename = file
         # Using self.path, get object name from object dictionary.
-        for item in objects.keys():
+        for item in object_dict.keys():
             if item in self.path:
                 self.objectname = item
         # Get object path from object directory.
-        obj_path = objects[self.objectname]
+        obj_path = object_dict[self.objectname]
         self.telescopes = []
         for telescope in os.scandir(obj_path):
             if telescope.is_dir() and "." not in telescope.name:
@@ -169,7 +171,8 @@ class Chandra(Telescope):
             return energies  # Return list of filtered energies.
         else:
             with fits.open(self.path) as hdul:
-                evt_data = hdul[1].data
+                evt_table = hdul[1]
+                evt_data = evt_table.data
                 # Use energy filter to filter events.
                 evt_data = evt_data[filter_list]
                 if filename is None:
@@ -395,7 +398,7 @@ class XMM(Telescope):
                 evt_table = hdul[1]
                 evt_table.data = evt_table.data[filter_list]
                 # Energies present in the specified region.
-                energies_in_region = evt_table.data["energy"]
+                energies_in_region = evt_table.data["PI"]
             return energies_in_region
         else:
             with fits.open(self.path) as hdul:
@@ -415,7 +418,9 @@ class XMM(Telescope):
 
 
 class Rosat(Telescope):
-    """Takes a file path or name as input. As of now, this class can initiate data, yield energy histograms, and filter files based on photon intensity (energy) and position.
+    """FITS.OPEN CURRENTLY BROKEN FOR ROSAT FILES. STILL TRYING TO TROUBLESHOOT.
+
+    Takes a file path or name as input. As of now, this class can initiate data, yield energy histograms, and filter files based on photon intensity (energy) and position.
     """
 
     def __init__(self, file):
@@ -445,7 +450,8 @@ class Rosat(Telescope):
                 min_e, max_e = e_range, float("inf")
             except TypeError:  # If no range is passed as input
                 min_e, max_e = 0, float("inf")
-            hdul = fits.open(self.path)  # Open data file
+            # Open data file
+            hdul = fits.open(self.path, ignore_missing_end=True)
             evt_data = hdul[2].data  # Get event data from file
             energy = evt_data["PI"]  # Get energy data from event data
             min_thresh = energy >= min_e  # Establish min filter
@@ -570,7 +576,7 @@ class Rosat(Telescope):
                 evt_table = hdul[2]
                 evt_table.data = evt_table.data[filter_list]
                 # Energies present in the specified region.
-                energies_in_region = evt_table.data["energy"]
+                energies_in_region = evt_table.data["PI"]
             return energies_in_region
         else:
             with fits.open(self.path) as hdul:
@@ -712,8 +718,8 @@ class Swift(Telescope):
         This method was designed with reference to the application "SAOImage ds9" and its ability to overlay regions on a given image. Once a region is created and selected, go to Region->Get Information to view its size parameters. Change the units to "detector," and those numbers may be used as input for this method.
         """
         evt_data = fits.getdata(self.path)  # Get event data from file
-        ra = evt_data["X"]  # Get RA coordinates from event data
-        dec = evt_data["Y"]  # Get Dec coordinates from event data
+        ra = evt_data["x"]  # Get RA coordinates from event data
+        dec = evt_data["y"]  # Get Dec coordinates from event data
         # Create True boolean filter list the length of the coordinate data. This will be referenced and altered by each successive coordinate filter (ra_range and dec_range).
         filter_list = [True for i in range(len(ra))]
         if shape == "box":
@@ -739,15 +745,15 @@ class Swift(Telescope):
                     filter_list[i] = False
         if newfile == False:
             with fits.open(self.path) as hdul:
-                evt_data = hdul[1].data
-                evt_data = evt_data[filter_list]
+                evt_table = hdul[1]
+                evt_table.data = evt_table.data[filter_list]
                 # Energies present in the specified region.
-                energies_in_region = evt_data["energy"]
+                energies_in_region = evt_table.data["PI"]
             return energies_in_region
         else:
             with fits.open(self.path) as hdul:
-                evt_data = hdul[1].data
-                evt_data = evt_data[filter_list]
+                evt_table = hdul[1]
+                evt_table.data = evt_table.data[filter_list]
                 if filename is None:
                     filename = f"{self.filename}"
                 try:
