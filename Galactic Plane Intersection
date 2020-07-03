@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jun 28 11:54:10 2020
+
+@author: susannahabrams
+"""
+
+from astropy.io import fits
+from astropy.coordinates import SkyCoord
+from astropy import units as u 
+import matplotlib.pyplot as plt
+import healpy as hp
+import numpy as np
+ 
+url = "https://dcc.ligo.org/public/0157/P1800381/007/GW170823_skymap.fits.gz"
+
+#plot the gw event:
+ax = plt.axes(projection='astro hours mollweide')
+ax.imshow_hpx(url, cmap='cylon')
+ax.grid()
+
+#list points along the galactic plane in equitorial coordinates:
+l = np.arange(0,360)
+b = np.zeros(360)
+c_ga = SkyCoord(l=l*u.degree, b=b*u.degree, frame = "galactic")
+c_icrs= c_ga.icrs
+
+#setting up information from the gw file: 
+a= fits.open(url)
+prob= hp.read_map(a)
+npix = len(prob)
+nside = hp.npix2nside(npix)
+
+#find the probability per deg2 that the source is in a given direction: 
+#(some stuff directly from this paper: doi.org/10.3847/0067-0049/226/1/10)
+ra_good =[]
+dec_good = []          
+for coordinate in c_icrs:
+    theta = 0.5*np.pi - np.deg2rad(coordinate.dec.degree)
+    phi = np.deg2rad(coordinate.ra.degree)
+    ipix= hp.ang2pix(nside,theta,phi) #index of the pixel in that direction
+    pixarea = hp.nside2pixarea(nside, degrees = True) #area of the pixel in degrees 
+    dp_dA = prob[ipix]/pixarea #probability at that pixel per area of the pixel in degrees
+    if dp_dA > 0.0001:
+        ra_good.append(coordinate.ra.degree)
+        dec_good.append(coordinate.dec.degree)
+        c_icrs_good = SkyCoord(ra= ra_good*u.degree, dec= dec_good*u.degree, frame = "icrs")
+        print ("good:", coordinate, dp_dA)
+    else:
+        print (coordinate, dp_dA)
+
+#plot the probabilities that are greater than a particular value:
+#*note* this plot has 0 at the center, as opposed to on the far right      
+if len(ra_good) == 0:
+    print ("none")
+else:
+    c_icrs_good = SkyCoord(ra= ra_good*u.degree, dec= dec_good*u.degree, frame = "icrs")     
+    plt.figure(figsize= (10,5))
+    ax= plt.subplot(111, projection= "mollweide")
+    ax.grid(True)
+    tick_labels = np.array(["14h", "16h", "18h", "20h", "22h", "0h", "2h", "4h", "6h", "8h", "10h"])
+    ax.set_xticklabels(tick_labels)
+    ra_rad = c_icrs_good.ra.wrap_at(180 * u.deg).radian
+    dec_rad = c_icrs_good.dec.radian
+    ax.plot(ra_rad, dec_rad, 'o', markersize=5)
+    print (ra_good, dec_good)
+
+
+#stuff that needs looking into:
+    #1) what value for probability per deg2 is meaningful?
+    #2) are these actually correct points along the galactic plane? should thickness also play a role,
+    #or is this line of points enough to get a good idea? also make sure that all the units are okay...
+    #3) maybe try to flip and shift the plot of points so its easier to compare with the gw plot
