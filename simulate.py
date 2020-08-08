@@ -31,18 +31,24 @@ def generate_dust(nphotons):
     # create dataframe
     data = pd.DataFrame()
 
-    # generate specifed photons with random RA, Dec, and distance (d is the distance to the dust grain along the line of sight to the source)
+    # generate specifed photons with random RA, Dec, and distance
+    # (d is the distance to the dust grain along the line of sight
+    # to the source)
     data["photons"] = np.arange(0, nphotons)
     data["ra"] = np.random.randint(0, 3600, size=data["photons"].shape)/10
     data["dec"] = np.random.randint(0, 900, size=data["photons"].shape)/10
     data["d"] = np.random.randint(0, 100, size=data["photons"].shape)
 
-    # ra_diff and dec_diff are the differences in position of the dust grains with respect to the source and along the line of sight
+    # ra_diff and dec_diff are the differences in position of the
+    # dust grains with respect to the source and along the line of
+    # sight
     ra_diff, dec_diff = -data["ra"]+source[0], -data["dec"]+source[1]
-    # r is the degree separations between the source and the dust grains
+    # r is the degree separations between the source and the dust
+    # grains
     data["r"] = np.sqrt(np.power(ra_diff, 2) + np.power(dec_diff, 2))
 
-    # scatter angle is the angles the photons need to scatter to reach us, given the locations of the dust grains
+    # scatter angle is the angles the photons need to scatter to
+    # reach us, given the locations of the dust grains
     data["scatter angle"] = np.round(np.arctan(data["r"]/data["d"]), 3)
 
     # return populated DataFrame
