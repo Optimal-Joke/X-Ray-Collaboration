@@ -99,7 +99,6 @@ probs = equation(thetas)
 p_total = np.sum(probs)
 p_list = np.divide(probs, p_total)
 a = np.round(choices(thetas, weights=p_list, k=10**5), 3)
-# np.histogram(a, bins=100)
 
 # randomly choose the optimal scattering angle
 sa = choice(a)
@@ -129,6 +128,11 @@ cbar = plt.colorbar()
 
 # plot source
 plt.plot(180, 45, 'k*', markersize=8)
+
+# create legend
+plt.legend(labels=["source", "scattered photons"],
+           loc=(0.16, 1.01), ncol=2, columnspacing=1,
+           handletextpad=0.1, scatteryoffsets=[0.4])
 
 # label axes and colorbar
 plt.xlabel("Right Ascension")
