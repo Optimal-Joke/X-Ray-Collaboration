@@ -6,7 +6,7 @@ authors: Susannah Abrams, Hunter Holland
 
 # %%
 # ___________________________IMPORTING NECESSARY MODULES___________________________
-from random import choice, choices
+from random import choices
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -50,7 +50,7 @@ def generate_weighted_angles(angles):
     # create list of possible scattering angles for the photons weighted
     # by their likelihood (angles can appear more than once in the list, with
     # more likely angles appearing more often)
-    scatter_angles = np.round(choices(angles, weights=p_list, k=10**5), 3)
+    scatter_angles = np.round(choices(angles, weights=p_list, k=10**6), 3)
     return scatter_angles
 
 
@@ -100,7 +100,7 @@ def generate_dust(nphotons):
 # %%
 # ______________________CREATING PHOTON LOCATION DISTRIBUTION______________________
 # create list of angles
-thetas = np.arange(0, np.pi, step=10**-5)
+thetas = np.arange(0, np.pi, step=10**-6)
 
 # generate weighted list of possible scattering angles
 weighted_scatter = generate_weighted_angles(thetas)
