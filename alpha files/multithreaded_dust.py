@@ -1,9 +1,10 @@
 # %%
 from random import choices
-import numpy as np
-import pandas as pd
 import multiprocessing as mp
 from os import cpu_count
+import pebble
+import numpy as np
+import pandas as pd
 
 from test import *
 
@@ -87,6 +88,16 @@ def dust_chunk(chunkphotons: int):
     # scatter angle is the angles at which each dust grain would actually
     # scatter a photon
     chunkdata["scatter angle"] = choices(weighted_scatter, k=chunkphotons)
+    print(chunkdata.info())
+    # # isolate all photons that scattered to us
+    # scattered = chunkdata[chunkdata["scatter angle"] == chunkdata["angle"]]
+
+    # # calculate true distances to the grains that scattered them
+    # scattered["d_grain"] = scattered["d"]/np.cos(scattered["scatter angle"])
+
+    # # calculate the light travel time from grains to us
+    # speedoflight = 3
+    # scattered["t"] = scattered["d_grain"]/speedoflight
 
     # return populated DataFrame
     # return_list.append(chunkdata)
@@ -99,29 +110,20 @@ def batch_dust(nphotons):
     """
     # determine number and size of chunks to be created
     NCHUNKS = cpu_count()
+    NCHUNKS = 24
     nphotons_chunked = nphotons//NCHUNKS
 
     n = [nphotons_chunked for i in range(NCHUNKS)]
 
-    # # create and start worker process for each chunk
-    # manager = mp.Manager()
-    # return_list = manager.list()
-    # processes = []
-    # for chunk in range(NCHUNKS):
-    #     p = mp.Process(target=dust_chunk, args=(
-    #         nphotons_chunked, return_list))
-    #     processes.append(p)
-    #     p.start()
-
-    # # wait for the processes to finish
-    # for process in processes:
-    #     process.join(timeout=5)
-    # return return_list
-
-    # create worker pool
-    p = mp.Pool()
-    results = p.map(dust_chunk, n)
-    p.close()
+    # # create worker pool
+    # with mp.Pool(maxtasksperchild=1) as p:
+    #     results = p.map(dust_chunk, n)
+    # p.close()
+    # p.join()
+    with pebble.ProcessPool() as pool:
+        res_iter = pool.map(dust_chunk, n)
+        results = res_iter.result()
+    return results
 
 
 # create list of angles
@@ -135,7 +137,10 @@ source = (180.0, 45.0)
 NPHOTONS = 10**8
 
 # generate dust layer/photons
-batch_dust(1000000)
+a = batch_dust(NPHOTONS)
+print(a)
+for i in a:
+    print(i)
 
 
 # %%

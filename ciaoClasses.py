@@ -8,7 +8,6 @@ from collections import Counter
 from astropy.io import fits
 import numpy as np
 import matplotlib.pyplot as plt
-from halo import halo
 
 # data_dir should be a directory containing each object as it's own subdirectory.
 # Objects should have subdirectories for each telescope's data.
@@ -221,9 +220,6 @@ class Chandra(Telescope):
         print(f"shell commands executed: {command}")
         os.system(command)
         print(f"Data filtered into file {newfile} in directory {out_dir}")
-
-    def find_halos(self):
-        halo(self.file_path)
 
     def mosaic(self, *files):
         pass
