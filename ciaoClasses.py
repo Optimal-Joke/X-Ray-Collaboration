@@ -360,6 +360,25 @@ class XMM(Telescope):
         else:
             plt.show()
 
+    def filter_energy(self, e_range: tuple, *args: tuple, newfile="filtered_energy.fits"):
+        """Energy ranges should be input as tuples. For example, a range from 100-400ev would be
+        represented as (100,400), and ranges from 100-400eV, 500-900ev, and 1000-2000eV would be
+        represented as (100,400), (500,900), (1000,2000).
+        """
+        ranges = f"{e_range[0]}:{e_range[1]}"
+        for e_rng in args:
+            try:
+                ranges += f",{e_rng[0]}:{e_rng[1]}"
+            except TypeError:
+                ranges += f",{e_rng}:"
+
+        in_filepath = self.file_path
+        out_dir = os.path.dirname(self.file_path)
+        command = f"{ciao}; dmcopy \"{in_filepath}[EVENTS][PI={ranges}]\" {out_dir}/{newfile}"
+        print(f"shell commands executed: {command}")
+        os.system(command)
+        print(f"Data filtered into file {newfile} in directory {out_dir}")
+
 
 class Rosat(Telescope):
     """FITS.OPEN CURRENTLY BROKEN FOR ROSAT FILES. STILL TRYING TO TROUBLESHOOT.
@@ -646,11 +665,12 @@ class Swift(Telescope):
 
             # sort the identified maxima by count and return their x(RA) and y(Dec) coordinates
             image_maxes = sorted(image_maxes, key=lambda x: x[1], reverse=True)
-            print(len(image_maxes))
+
             centroid_xs = np.array([item[0][0] for item in image_maxes])
             centroid_ys = np.array([item[0][1] for item in image_maxes])
             return centroid_xs, centroid_ys
 
 
-test = Swift("/Users/hunterholland/Documents/Research/Laidlaw/Data/Modified/L1517/Swift/xrt/event/sw00034249004xpcw3po_cl.evt.gz")
-test.find_centroids()
+test = XMM("/Users/hunterholland/Documents/Research/Laidlaw/Data/Modified/B59/XMM/PPS/evt/P0206610101M1S001MIEVLI0000.FTZ")
+test.filter_energy((1250,1750), newfile="filteredenergy1250_1750.fits")
+# test.e_hist((400, 4000))

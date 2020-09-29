@@ -1,8 +1,7 @@
 # %%
 from random import choices
-import multiprocessing as mp
+import concurrent.futures
 from os import cpu_count
-import pebble
 import numpy as np
 import pandas as pd
 
@@ -88,7 +87,7 @@ def dust_chunk(chunkphotons: int):
     # scatter angle is the angles at which each dust grain would actually
     # scatter a photon
     chunkdata["scatter angle"] = choices(weighted_scatter, k=chunkphotons)
-    print(chunkdata.info())
+    # print(chunkdata.info())
     # # isolate all photons that scattered to us
     # scattered = chunkdata[chunkdata["scatter angle"] == chunkdata["angle"]]
 
@@ -110,37 +109,31 @@ def batch_dust(nphotons):
     """
     # determine number and size of chunks to be created
     NCHUNKS = cpu_count()
-    NCHUNKS = 24
-    nphotons_chunked = nphotons//NCHUNKS
+    n = nphotons//NCHUNKS
 
-    n = [nphotons_chunked for i in range(NCHUNKS)]
-
-    # # create worker pool
-    # with mp.Pool(maxtasksperchild=1) as p:
-    #     results = p.map(dust_chunk, n)
-    # p.close()
-    # p.join()
-    with pebble.ProcessPool() as pool:
-        res_iter = pool.map(dust_chunk, n)
-        results = res_iter.result()
-    return results
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = [executor.submit(dust_chunk, n) for _ in range(NCHUNKS)]
+        for f in concurrent.futures.as_completed(results):
+            print(f.result())
+        return results 
 
 
-# create list of angles
-thetas = np.arange(0, np.pi, step=10**-5)
+if __name__ == "__main__":
+    # create list of angles
+    thetas = np.arange(0, np.pi, step=10**-5)
 
-# generate weighted list of possible scattering angles
-weighted_scatter = generate_weighted_angles(thetas)
+    # generate weighted list of possible scattering angles
+    weighted_scatter = generate_weighted_angles(thetas)
 
-# set source location and number of photons to be generated
-source = (180.0, 45.0)
-NPHOTONS = 10**8
+    # set source location and number of photons to be generated
+    source = (180.0, 45.0)
+    NPHOTONS = 10**8
 
-# generate dust layer/photons
-a = batch_dust(NPHOTONS)
-print(a)
-for i in a:
-    print(i)
+    # generate dust layer/photons
+    a = batch_dust(NPHOTONS)
+    # print(a)
+    # for i in a:
+    #     print(i)
 
 
 # %%
